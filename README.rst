@@ -11,7 +11,7 @@ in general and play through setting up an LDAP server.
 .. note::
 
   The script assumes that ``slapd`` is already installed on the system and
-  available in ``PATH``. Please see the file ``installing-slapd.rst`` in this
+  available in ``PATH``. Please see the file ``installing-openldap.rst`` in this
   repository for information on how to install ``slapd`` along with other
   OpenLDAP software.
 
