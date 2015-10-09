@@ -24,6 +24,10 @@ Homebrew alongside with a newer version of openssl::
 
 The current versions available are ``openssl (1.0.2d_1)`` and ``openldap (2.4.41_1)``.
 
+Make sure to make ``slapd`` and its tools available in ``PATH``::
+
+  PATH="/usr/local/Cellar/openldap/2.4.41_1/bin:/usr/local/Cellar/openldap/2.4.41_1/sbin:/usr/local/Cellar/openldap/2.4.41_1/libexec/:${PATH}"
+
 Windows
 =======
 
