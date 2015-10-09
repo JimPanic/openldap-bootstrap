@@ -60,6 +60,7 @@ data_d_root_hash=`slappasswd -v -s "${data_d_root_pw}"`
 mkdir -p "${instance_path}/etc/"{certificates,keys}
 mkdir -p "${instance_path}/ldif"
 mkdir -p "${instance_path}/"{run,log,config.d,data.d}
+mkdir -p "${instance_path}/run/socket"
 
 # Create log file (needs to exist before slapd starts)
 touch "${instance_path}/log/slapd.log"
@@ -104,6 +105,8 @@ Configuration root password:      ${config_d_root_pw}
 Database directory:               ${data_d_path}
 Database root bind DN:            cn=root,${tree_root}
 Database root password:           ${data_d_root_pw}
+
+Socket directory:                 ${instance_path}/run/socket
 
 Prepared LDIFs: 
  - cn=config                      ${instance_path}/ldif/cn=config.ldif

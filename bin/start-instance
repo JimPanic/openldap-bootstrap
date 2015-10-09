@@ -48,12 +48,15 @@ ls "${canonical_instance_path}/config.d" &> /dev/null || {
 user=$(whoami)
 group=$(groups | awk -F ' ' '{ print $1; }')
 
+socket_path="${canonical_instance_path}/run/socket"
+encoded_socket_path=$(echo $socket_path | sed -e "s|/|%2F|g" | sed -e "s| |%20|g")
+
 slapd \
   -4 \
   -F "${canonical_instance_path}/config.d" \
   -g "${group}" \
   -u "${user}" \
-  -h "ldapi:/// ldap://127.0.0.1:${instance_port}" \
+  -h "ldapi://${encoded_socket_path}/ ldap://127.0.0.1:${instance_port}" \
   -n "${instance_name}" \
   && {
   echo 'Success.'
