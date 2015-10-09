@@ -1,32 +1,35 @@
 #!/bin/bash
 
-usage="Usage: new <instance path> <tree root dn>
-
-Example: new ~/slapd-test \"dc=local\""
-
 set -e
 set -u
 set -o errexit
 
-test "$#" -ne "2" \
-  && echo "ERROR: Invalid amount of arguments $#, need 2." \
-  && echo "" \
-  && echo "$usage" \
-  && exit 1
+usage="Usage: new <instance path> <tree root dn>
+
+Example: new ~/slapd-test \"dc=local\""
+
+test "$#" -ne 2 && {
+  echo "ERROR: Invalid amount of arguments $#, need 2."
+  echo ""
+  echo "$usage"
+  exit 1
+}
 
 instance_path="$1"
 tree_root="$2"
 
-ls "${instance_path}" &> /dev/null \
-  && echo "ERROR: Given instance path is already present and not empty (${instance_path})" \
-  && echo "" \
-  && echo "Please supply a path that is non-existent or empty." \
-  && exit 1
+ls "${instance_path}" &> /dev/null && {
+  echo "ERROR: Given instance path is already present and not empty (${instance_path})"
+  echo ""
+  echo "Please supply a path that is non-existent or empty."
+  exit 1
+}
 
 # Get the canonical path to $0
 pushd `dirname "$0"` > /dev/null
 bin_path=`pwd -P`
 popd > /dev/null
+
 
 # Get the canonical path to the ldif directory (dirname $0/../ldif)
 pushd "${bin_path}/../ldif/" > /dev/null
@@ -52,13 +55,22 @@ mkdir -p "${instance_path}/etc/"{certificates,keys}
 mkdir -p "${instance_path}/ldif"
 mkdir -p "${instance_path}/"{run,log,config.d,data.d}
 
+# Create log file (needs to exist before slapd starts)
+touch "${instance_path}/log/slapd.log"
+
 # Copy over (all) schema ldifs, the user will decide which ones to load via
 # slapadd
 cp -r "${ldif_path}/schema" "${instance_path}/ldif/"
 
+# Get the canonical instance path
+pushd "${instance_path}" > /dev/null
+canonical_instance_path=`pwd -P`
+popd > /dev/null
+
 # Copy over selected configuration ldifs with replaced placeholders
 cat "${ldif_path}/cn=config.ldif" \
-  | sed -e "s|TREE_ROOT_DN|${tree_root}|" \
+  | sed -e "s|TREE_ROOT_DN|${tree_root}|g" \
+  | sed -e "s|INSTANCE_PATH|${canonical_instance_path}|g" \
   > "${instance_path}/ldif/cn=config.ldif"
 
 cat "${ldif_path}/cn=schema,cn=config.ldif" \
