@@ -1,0 +1,6 @@
+dn: cn=config
+objectClass: olcGlobal
+cn: config
+olcArgsFile: INSTANCE_PATH/run/slapd.args
+olcPidFile: INSTANCE_PATH/run/slapd.pid
+olcSecurity: ssf=128 update_ssf=128 simple_bind=128

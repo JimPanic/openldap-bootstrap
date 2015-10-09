@@ -1,0 +1,4 @@
+# Base schema config needed to add schemas
+dn: cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: schema

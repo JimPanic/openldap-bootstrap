@@ -1,0 +1,104 @@
+#!/bin/bash
+
+usage="Usage: new <instance path> <tree root dn>
+
+Example: new ~/slapd-test \"dc=local\""
+
+set -e
+set -u
+set -o errexit
+
+test "$#" -ne "2" \
+  && echo "ERROR: Invalid amount of arguments $#, need 2." \
+  && echo "" \
+  && echo "$usage" \
+  && exit 1
+
+instance_path="$1"
+tree_root="$2"
+
+ls "${instance_path}" &> /dev/null \
+  && echo "ERROR: Given instance path is already present and not empty (${instance_path})" \
+  && echo "" \
+  && echo "Please supply a path that is non-existent or empty." \
+  && exit 1
+
+# Get the canonical path to $0
+pushd `dirname "$0"` > /dev/null
+bin_path=`pwd -P`
+popd > /dev/null
+
+# Get the canonical path to the ldif directory (dirname $0/../ldif)
+pushd "${bin_path}/../ldif/" > /dev/null
+ldif_path=`pwd -P`
+popd > /dev/null
+
+# root DN (bind DN) and password for the database
+data_root_dn="cn=root,${tree_root}"
+data_root_pw=`date | md5`
+
+# Config database path and root dn password (cn=root,cn=config)
+config_d_path="${instance_path}/config.d"
+config_d_root_pw=`slappasswd -g`
+config_d_root_hash=`slappasswd -v -s "${config_d_root_pw}"`
+
+# Database path, root dn password (cn=root,<tree_root>)
+data_d_path="${instance_path}/data.d"
+data_d_root_pw=`slappasswd -g`
+data_d_root_hash=`slappasswd -v -s "${data_d_root_pw}"`
+
+# Create instance directories
+mkdir -p "${instance_path}/etc/"{certificates,keys}
+mkdir -p "${instance_path}/ldif"
+mkdir -p "${instance_path}/"{run,log,config.d,data.d}
+
+# Copy over (all) schema ldifs, the user will decide which ones to load via
+# slapadd
+cp -r "${ldif_path}/schema" "${instance_path}/ldif/"
+
+# Copy over selected configuration ldifs with replaced placeholders
+cat "${ldif_path}/cn=config.ldif" \
+  | sed -e "s|TREE_ROOT_DN|${tree_root}|" \
+  > "${instance_path}/ldif/cn=config.ldif"
+
+cat "${ldif_path}/cn=schema,cn=config.ldif" \
+  > "${instance_path}/ldif/cn=schema,cn=config.ldif"
+
+cat "${ldif_path}/frontend-config-databases,cn=config.ldif" \
+  | sed -e "s|TREE_ROOT_DN|${tree_root}|g" \
+  | sed -e "s|CONFIG_ROOT_PW|${config_d_root_hash}|g" \
+  > "${instance_path}/ldif/frontend-config-databases,cn=config.ldif"
+
+cat "${ldif_path}/database,cn=config.ldif" \
+  | sed -e "s|TREE_ROOT_DN|${tree_root}|g" \
+  | sed -e "s|ROOT_PW|${data_d_root_hash}|g" \
+  | sed -e "s|DATABASE_DIR|${data_d_path}|g" \
+  > "${instance_path}/ldif/database,cn=config.ldif"
+
+info="
+Instance path:                    ${instance_path}
+Log dir:                          ${instance_path}/log
+
+Configuration database directory: ${config_d_path}
+Configuration root bind DN:       cn=root,cn=config
+Configuration root password:      ${config_d_root_pw}
+
+Database directory:               ${data_d_path}
+Database root bind DN:            cn=root,${tree_root}
+Database root password:           ${data_d_root_pw}
+
+Prepared LDIFs: 
+ - cn=config                      ${instance_path}/ldif/cn=config.ldif
+ - cn=schema,cn=config            ${instance_path}/ldif/cn=schema,cn=config.ldif
+ - frontend & config database definitions
+                                  ${instance_path}/ldif/frontend-config-database,cn=config.ldif
+ - database,cn=config             ${instance_path}/ldif/database,cn=config.ldif
+"
+
+echo "${info}" > "${instance_path}/info"
+
+echo "A new slapd instance was created."
+echo "${info}"
+
+echo "The above information including bind DNs and passwords was also written"
+echo "to ${instance_path}/info"
