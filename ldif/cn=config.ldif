@@ -3,4 +3,6 @@ objectClass: olcGlobal
 cn: config
 olcArgsFile: INSTANCE_PATH/run/slapd.args
 olcPidFile: INSTANCE_PATH/run/slapd.pid
+olcLogFile: INSTANCE_PATH/log/slapd.log
+olcLogLevel: stats config acl none
 olcSecurity: ssf=128 update_ssf=128 simple_bind=128

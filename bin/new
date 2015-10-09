@@ -77,7 +77,7 @@ cat "${ldif_path}/database,cn=config.ldif" \
 
 info="
 Instance path:                    ${instance_path}
-Log dir:                          ${instance_path}/log
+Log file:                         ${instance_path}/log/slapd.log
 
 Configuration database directory: ${config_d_path}
 Configuration root bind DN:       cn=root,cn=config
