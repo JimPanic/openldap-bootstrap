@@ -4,15 +4,21 @@ set -e
 set -u
 set -o errexit
 
-usage="Usage: cat-config <instance path>
+bin_name=$(basename $0)
+usage="Usage: ${bin_name} <instance path>
 
-Example: cat-config ~/slapd-test"
+Example: ${bin_name} ~/slapd-test"
 
 test "$#" -ne 1 && {
   echo "ERROR: Invalid amount of arguments $#, need 1."
   echo ""
   echo "$usage"
   exit 1
+}
+
+(test "$1" = "-h" || test "$1" = "--help") && {
+  echo "$usage"
+  exit 0
 }
 
 instance_path=$1

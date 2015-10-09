@@ -22,8 +22,8 @@ Check out this repository locally and navigate to it::
 
   git clone https://github.com/JimPanic/openldap-bootstrap.git
 
-Usage
-=====
+Creating a new instance
+=======================
 
 ``bin/new`` is responsible for creating a set of directories and prepared LDIF
 files that can then be added to the database(s) as needed. It also generates
@@ -58,3 +58,20 @@ This creates the following directories and files::
   └── run
 
   9 directories, 5 files
+
+Adding config to an instance
+============================
+
+``bin/add-config`` invokes ``slapadd`` to add the provided LDIF file to the
+config database of given instance. It expects the instance path as first and a
+path to the LDIF file as second parameter.
+
+Example::
+
+  # bin/add-config ~/ldap-server ~/ldap-server/ldif/cn=config.ldif
+
+Dumping the config of an instance
+=================================
+
+``bin/dump-config`` outputs the contents of the given instance's config
+database in LDIF format. It takes only the instance path as parameter.

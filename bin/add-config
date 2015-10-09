@@ -4,9 +4,15 @@ set -e
 set -u
 set -o errexit
 
-usage="Usage: add-config <instance path> <ldif file>
+bin_name=$(basename $0)
+usage="Usage: ${bin_name} <instance path> <ldif file>
 
-Example: add-config ~/slapd-test ldif/cn=config.ldif"
+Example: ${bin_name} ~/slapd-test ldif/cn=config.ldif"
+
+(test "$1" = "-h" || test "$1" = "--help") && {
+  echo "$usage"
+  exit 0
+}
 
 test "$#" -ne 2 && {
   echo "ERROR: Invalid amount of arguments $#, need 2."
