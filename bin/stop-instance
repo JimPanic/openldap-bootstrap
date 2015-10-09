@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -e
+set -u
+set -o errexit
+
+bin_name=$(basename $0)
+usage="Usage: ${bin_name} <instance path>
+
+Example: ${bin_name} ~/slapd-test"
+
+(test "$1" = "-h" || test "$1" = "--help") && {
+  echo "$usage"
+  exit 0
+}
+
+test "$#" -ne 1 && {
+  echo "ERROR: Invalid amount of arguments $#, need 1."
+  echo ""
+  echo "$usage"
+  exit 1
+}
+
+instance_path=$1
+instance_name="$(basename $instance_path)"
+
+instance_port=3389
+
+set +u
+test "$SLAPD_PORT" = "" && {
+  instance_port=$SLAPD_PORT
+}
+set -u
+
+# Get canonical instance path
+pushd "${instance_path}" > /dev/null
+canonical_instance_path=`pwd -P`
+popd > /dev/null
+
+ls "${canonical_instance_path}/run" &> /dev/null || {
+  echo "ERROR: Given instance path is invalid as it has no run/ directory."
+  echo ""
+  echo "Please supply a valid instance path created by 'new-instance'"
+  exit 1
+}
+
+pid_file="${canonical_instance_path}/run/slapd.pid"
+
+ls "${pid_file}" &> /dev/null && {
+  pid=$(cat $pid_file)
+
+  kill -0 $pid && {
+    kill -INT $pid
+    echo "Sent interrupt signal to instance ${instance_name} (pid ${pid})"
+    exit 0
+  }
+}
+
+echo "Instance ${instance_name} is not running. Cannot kill it."
+exit 1 

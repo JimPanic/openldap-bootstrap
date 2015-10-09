@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+set -u
+set -o errexit
+
+bin_name=$(basename $0)
+usage="Usage: ${bin_name} <instance path>
+
+Example: ${bin_name} ~/slapd-test"
+
+(test "$1" = "-h" || test "$1" = "--help") && {
+  echo "$usage"
+  exit 0
+}
+
+test "$#" -ne 1 && {
+  echo "ERROR: Invalid amount of arguments $#, need 1."
+  echo ""
+  echo "$usage"
+  exit 1
+}
+
+instance_path=$1
+
+# Get canonical instance path
+pushd "${instance_path}" > /dev/null
+canonical_instance_path=`pwd -P`
+popd > /dev/null
+
+ls "${canonical_instance_path}/config.d" &> /dev/null || {
+  echo "ERROR: Given instance path does not have a config.d/ directory."
+  echo ""
+  echo "Please supply a valid instance path created by the 'new' script"
+  exit 1
+}
+
+echo "# slaptest -F \"${canonical_instance_path}/config.d\""
+echo ''
+
+slaptest -F "${canonical_instance_path}/config.d"

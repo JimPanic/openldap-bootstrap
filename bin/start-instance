@@ -1,0 +1,65 @@
+#!/bin/bash
+
+set -e
+set -u
+set -o errexit
+
+bin_name=$(basename $0)
+usage="Usage: ${bin_name} <instance path>
+
+Example: ${bin_name} ~/slapd-test"
+
+(test "$1" = "-h" || test "$1" = "--help") && {
+  echo "$usage"
+  exit 0
+}
+
+test "$#" -ne 1 && {
+  echo "ERROR: Invalid amount of arguments $#, need 1."
+  echo ""
+  echo "$usage"
+  exit 1
+}
+
+instance_path=$1
+instance_name="$(basename $instance_path)"
+
+instance_port=3389
+
+set +u
+test "$SLAPD_PORT" = "" || {
+  instance_port=$SLAPD_PORT
+}
+set -u
+
+# Get canonical instance path
+pushd "${instance_path}" > /dev/null
+canonical_instance_path=`pwd -P`
+popd > /dev/null
+
+ls "${canonical_instance_path}/config.d" &> /dev/null || {
+  echo "ERROR: Given instance path does not have a config.d/ directory."
+  echo ""
+  echo "Please supply a valid instance path created by 'new-instance'"
+  exit 1
+}
+
+# Get current user and group
+user=$(whoami)
+group=$(groups | awk -F ' ' '{ print $1; }')
+
+slapd \
+  -4 \
+  -F "${canonical_instance_path}/config.d" \
+  -g "${group}" \
+  -u "${user}" \
+  -h "ldapi:/// ldap://127.0.0.1:${instance_port}" \
+  -n "${instance_name}" \
+  && {
+  echo 'Success.'
+  exit 0
+}
+
+echo 'slapd exit code is not 0. Something went wrong.'
+exit 1
+
