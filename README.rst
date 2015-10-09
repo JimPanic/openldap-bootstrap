@@ -70,6 +70,19 @@ Example::
 
   # bin/add-config ~/ldap-server ~/ldap-server/ldif/cn=config.ldif
 
+Testing config of an instance
+=============================
+
+``bin/test-config`` runs ``slaptest`` on the config database directory. It
+takes the instance path as argument.
+
+Example::
+
+  # bin/test-config ~/ldap-server
+  > slaptest -F "/Users/apanek/rise/ops/openldap-utils/test/config.d"
+
+  config file testing succeeded
+
 Dumping the config of an instance
 =================================
 
@@ -79,3 +92,23 @@ database in LDIF format. It takes only the instance path as parameter.
 Example::
 
   # bin/dump-config ~/ldap-server
+
+Starting, stopping and checking the status of an instance
+=========================================================
+
+There are three commands to do this:
+
+* ``start-instance``
+* ``stop-instance``
+* ``instance-status``
+
+They all take only one parameter: the instance path.
+
+Example of the workflow::
+
+  # start-instance ~/ldap-server
+  Success.
+  # instance-status ~/ldap-server
+  Instance ldap-server is running. (pid 1234)
+  # stop-instance ~/ldap-server
+  Sent interrupt signal to instance ldap-server (pid 1234)
