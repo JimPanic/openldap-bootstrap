@@ -25,17 +25,17 @@ Check out this repository locally and navigate to it::
 Creating a new instance
 =======================
 
-``bin/new`` is responsible for creating a set of directories and prepared LDIF
-files that can then be added to the database(s) as needed. It also generates
-random passwords for the bind DNs needed to connect to the configuration
-database and the actual database.
+``bin/new-instance`` is responsible for creating a set of directories and
+prepared LDIF files that can then be added to the database(s) as needed. It
+also generates random passwords for the bind DNs needed to connect to the
+configuration database and the actual database.
 
 It expects two parameters: the path to a directory (that is empty or yet
 non-existent) for the new instance and the tree root DN for the database.
 
 Example::
 
-  # bin/new ~/ldap-server "dc=local"
+  # bin/new-instance ~/ldap-server "dc=local"
 
 This creates the following directories and files::
 

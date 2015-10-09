@@ -4,9 +4,15 @@ set -e
 set -u
 set -o errexit
 
-usage="Usage: new <instance path> <tree root dn>
+bin_name=$(basename $0)
+usage="Usage: ${bin_name} <instance path> <tree root dn>
 
-Example: new ~/slapd-test \"dc=local\""
+Example: ${bin_name} ~/slapd-test \"dc=local\""
+
+(test "$1" = "-h" || test "$1" = "--help") && {
+  echo "$usage"
+  exit 0
+}
 
 test "$#" -ne 2 && {
   echo "ERROR: Invalid amount of arguments $#, need 2."
