@@ -38,8 +38,7 @@ ls "${canonical_instance_path}/config.d" &> /dev/null || {
 echo "# $(date)"
 echo '# slapcat \'
 echo "# -F \"${canonical_instance_path}/config.d\" \\"
-echo "# -b \"cn=config\" \\"
-echo ''
+echo "# -b \"cn=config\""
 
 slapcat -F "${canonical_instance_path}/config.d" -b "cn=config" || {
   echo ""
