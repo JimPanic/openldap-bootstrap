@@ -75,3 +75,7 @@ Dumping the config of an instance
 
 ``bin/dump-config`` outputs the contents of the given instance's config
 database in LDIF format. It takes only the instance path as parameter.
+
+Example::
+
+  # bin/dump-config ~/ldap-server
