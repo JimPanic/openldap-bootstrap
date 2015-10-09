@@ -1,0 +1,68 @@
+#!/bin/bash
+
+set -e
+set -u
+set -o errexit
+
+usage="Usage: add-config <instance path> <ldif file>
+
+Example: add-config ~/slapd-test ldif/cn=config.ldif"
+
+test "$#" -ne 2 && {
+  echo "ERROR: Invalid amount of arguments $#, need 2."
+  echo ""
+  echo "$usage"
+  exit 1
+}
+
+instance_path=$1
+ldif=$2
+
+# Get canonical instance path
+pushd "${instance_path}" > /dev/null
+canonical_instance_path=`pwd -P`
+popd > /dev/null
+
+# Get canonical path to ldif file
+pushd `dirname "${ldif}"` > /dev/null
+ldif_basename=$(basename ${ldif})
+canonical_ldif="`pwd -P`/${ldif_basename}"
+popd > /dev/null
+
+ls "${canonical_instance_path}/config.d" &> /dev/null || {
+  echo "ERROR: Given instance path does not have a config.d/ directory."
+  echo ""
+  echo "Please supply a valid instance path created by the 'new' script"
+  exit 1
+}
+
+ls "${canonical_ldif}" &> /dev/null || {
+  echo "ERROR: Could not find given ldif file \"${canonical_ldif}\""
+  echo ""
+  echo "Please supply an existing ldif file."
+  echo "The prepared ldif files for given instance are in \"${canonical_instance_path}/ldif\"."
+  exit 1
+}
+
+echo "Importing ${ldif} with slapadd..."
+
+echo '# slapadd \'
+echo '# --verbose \'
+echo "# -F \"${canonical_instance_path}/config.d\" \\"
+echo "# -b \"cn=config\" \\"
+echo "# -l \"${ldif}\""
+echo ''
+
+slapadd -F "${canonical_instance_path}/config.d" -b "cn=config" -l "${ldif}" || {
+  echo ""
+  echo "ERROR: slapadd exit code not 0!"
+  echo ""
+  echo "It seems there was an error adding the given ldif to the config database."
+  echo ""
+  echo "Are you sure the data you tried to add is not yet in the database?"
+  echo "You can check with 'cat-config' and see if the contents of the ldif are"
+  echo "present already."
+  exit 1
+}
+
+echo "Success."

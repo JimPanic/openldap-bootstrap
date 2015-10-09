@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -e
+set -u
+set -o errexit
+
+usage="Usage: cat-config <instance path>
+
+Example: cat-config ~/slapd-test"
+
+test "$#" -ne 1 && {
+  echo "ERROR: Invalid amount of arguments $#, need 1."
+  echo ""
+  echo "$usage"
+  exit 1
+}
+
+instance_path=$1
+
+# Get canonical instance path
+pushd "${instance_path}" > /dev/null
+canonical_instance_path=`pwd -P`
+popd > /dev/null
+
+ls "${canonical_instance_path}/config.d" &> /dev/null || {
+  echo "ERROR: Given instance path does not have a config.d/ directory."
+  echo ""
+  echo "Please supply a valid instance path created by the 'new' script"
+  exit 1
+}
+
+echo "# $(date)"
+echo '# slapcat \'
+echo "# -F \"${canonical_instance_path}/config.d\" \\"
+echo "# -b \"cn=config\" \\"
+echo ''
+
+slapcat -F "${canonical_instance_path}/config.d" -b "cn=config" || {
+  echo ""
+  echo "ERROR: slapcat exit code not 0!"
+  echo ""
+  echo "What?"
+  exit 1
+}
