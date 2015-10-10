@@ -60,10 +60,10 @@ data_d_root_hash=`slappasswd -v -s "${data_d_root_pw}"`
 mkdir -p "${instance_path}/etc/"{certificates,keys}
 mkdir -p "${instance_path}/ldif"
 mkdir -p "${instance_path}/"{run,log,config.d,data.d}
-mkdir -p "${instance_path}/run/socket"
 
-# Create log file (needs to exist before slapd starts)
+# Create log and socket file (need to exist before slapd starts)
 touch "${instance_path}/log/slapd.log"
+touch "${instance_path}/run/socket"
 
 # Copy over (all) schema ldifs, the user will decide which ones to load via
 # slapadd
@@ -77,22 +77,12 @@ popd > /dev/null
 # Copy over selected configuration ldifs with replaced placeholders
 cat "${ldif_path}/cn=config.ldif" \
   | sed -e "s|TREE_ROOT_DN|${tree_root}|g" \
-  | sed -e "s|INSTANCE_PATH|${canonical_instance_path}|g" \
+        -e "s|INSTANCE_PATH|${canonical_instance_path}|g" \
+        -e "s|DATABASE_DIR|${data_d_path}|g" \
+        -e "s|CONFIG_D_PATH|${config_d_path}|g" \
+        -e "s|CONFIG_ROOT_PW|${config_d_root_pw}|g" \
+        -e "s|ROOT_PW|${data_d_root_hash}|g" \
   > "${instance_path}/ldif/cn=config.ldif"
-
-cat "${ldif_path}/cn=schema,cn=config.ldif" \
-  > "${instance_path}/ldif/cn=schema,cn=config.ldif"
-
-cat "${ldif_path}/frontend-config-databases,cn=config.ldif" \
-  | sed -e "s|TREE_ROOT_DN|${tree_root}|g" \
-  | sed -e "s|CONFIG_ROOT_PW|${config_d_root_hash}|g" \
-  > "${instance_path}/ldif/frontend-config-databases,cn=config.ldif"
-
-cat "${ldif_path}/database,cn=config.ldif" \
-  | sed -e "s|TREE_ROOT_DN|${tree_root}|g" \
-  | sed -e "s|ROOT_PW|${data_d_root_hash}|g" \
-  | sed -e "s|DATABASE_DIR|${data_d_path}|g" \
-  > "${instance_path}/ldif/database,cn=config.ldif"
 
 info="
 Instance path:                    ${instance_path}
