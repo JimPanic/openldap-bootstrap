@@ -1,34 +1,31 @@
 #!/bin/bash
 
-set -e
-set -u
-set -o errexit
+source "$(dirname $0)/functions.sh"
+
+$(fail_on_nontrue_return_value)
+$(fail_on_unbound_variables)
 
 bin_name=$(basename $0)
 usage="Usage: ${bin_name} <instance path>
 
 Example: ${bin_name} ~/slapd-test"
 
-test "$#" -ne 1 && {
+want_help $1 && {
+  echo "$usage"
+  exit 0
+}
+
+not_equal $# 1 && {
   echo "ERROR: Invalid amount of arguments $#, need 1."
   echo ""
   echo "$usage"
   exit 1
 }
 
-(test "$1" = "-h" || test "$1" = "--help") && {
-  echo "$usage"
-  exit 0
-}
-
 instance_path=$1
+canonical_instance_path=$(canonical_path "${instance_path}")
 
-# Get canonical instance path
-pushd "${instance_path}" > /dev/null
-canonical_instance_path=`pwd -P`
-popd > /dev/null
-
-ls "${canonical_instance_path}/config.d" &> /dev/null || {
+exists_not "${canonical_instance_path}/config.d" && {
   echo "ERROR: Given instance path does not have a config.d/ directory."
   echo ""
   echo "Please supply a valid instance path created by the 'new' script"

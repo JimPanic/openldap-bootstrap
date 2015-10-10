@@ -1,28 +1,21 @@
 #!/bin/bash
 
-set -e
-set -u
-set -o errexit
+source "$(dirname $0)/functions.sh"
 
-function canonical_path () {
-  pushd "$1" &> /dev/null
-  canonical=`pwd -P`
-  popd &> /dev/null
-
-  echo "${canonical}"
-}
+$(fail_on_nontrue_return_value)
+$(fail_on_unbound_variables)
 
 bin_name=$(basename $0)
 usage="Usage: ${bin_name} <instance path> <tree root dn>
 
 Example: ${bin_name} ~/slapd-test \"dc=local\""
 
-(test "$1" = "-h" || test "$1" = "--help") && {
+want_help $1 && {
   echo "$usage"
   exit 0
 }
 
-test "$#" -ne 2 && {
+not_equal $# 2 && {
   echo "ERROR: Invalid amount of arguments $#, need 2."
   echo ""
   echo "$usage"
@@ -32,7 +25,7 @@ test "$#" -ne 2 && {
 instance_path="$1"
 tree_root="$2"
 
-ls "${instance_path}" &> /dev/null && {
+exists "${instance_path}" && {
   echo "ERROR: Given instance path is already present and not empty (${instance_path})"
   echo ""
   echo "Please supply a path that is non-existent or empty."
@@ -48,28 +41,29 @@ data_root_pw=`date | md5`
 
 # Config database path and root dn password (cn=root,cn=config)
 config_d_path="${instance_path}/config.d"
-canonical_config_d_path=$(canonical_path "${config_d_path}")
 config_d_root_pw=`slappasswd -g`
 config_d_root_hash=`slappasswd -v -s "${config_d_root_pw}"`
 
 # Database path, root dn password (cn=root,<tree_root>)
 data_d_path="${instance_path}/data.d"
-canonical_data_d_path=$(canonical_path "${data_d_path}")
 data_d_root_pw=`slappasswd -g`
 data_d_root_hash=`slappasswd -v -s "${data_d_root_pw}"`
 
 # Create the instance directory and Get its canonical path
-mkdir "${instance_path}"
-canonical_instance_path=$(canonical_path "${instance_path}")
+mkdir -p "${instance_path}"
 
 # Create instance directories
-mkdir -p "${canonical_instance_path}/etc/"{certificates,keys}
-mkdir -p "${canonical_instance_path}/ldif"
-mkdir -p "${canonical_instance_path}/"{run,log,config.d,data.d}
+mkdir -p "${instance_path}/etc/"{certificates,keys}
+mkdir -p "${instance_path}/ldif"
+mkdir -p "${instance_path}/"{run,log,config.d,data.d}
 
 # Create log and socket file (need to exist before slapd starts)
-touch "${canonical_instance_path}/log/slapd.log"
-touch "${canonical_instance_path}/run/socket"
+touch "${instance_path}/log/slapd.log"
+touch "${instance_path}/run/socket"
+
+canonical_config_d_path=$(canonical_path "${config_d_path}")
+canonical_data_d_path=$(canonical_path "${data_d_path}")
+canonical_instance_path=$(canonical_path "${instance_path}")
 
 # Copy over (all) schema ldifs, the user will decide which ones to load via
 # slapadd
@@ -98,13 +92,13 @@ Database directory:               ${data_d_path}
 Database root bind DN:            cn=root,${tree_root}
 Database root password:           ${data_d_root_pw}
 
-Socket directory:                 ${instance_path}/run/socket
+ldapi socket file:                ${instance_path}/run/socket
 
 Prepared LDIFs:
  - cn=config                      ${instance_path}/ldif/cn=config.ldif
 "
 
-echo "${info}" > "${instance_path}/info"
+echo "${info}" > "${canonical_instance_path}/info"
 
 echo "A new slapd instance was created."
 echo "${info}"

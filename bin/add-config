@@ -1,20 +1,21 @@
 #!/bin/bash
 
-set -e
-set -u
-set -o errexit
+source "$(dirname $0)/functions.sh"
+
+$(fail_on_nontrue_return_value)
+$(fail_on_unbound_variables)
 
 bin_name=$(basename $0)
 usage="Usage: ${bin_name} <instance path> <ldif file>
 
 Example: ${bin_name} ~/slapd-test ldif/cn=config.ldif"
 
-(test "$1" = "-h" || test "$1" = "--help") && {
+want_help $1 && {
   echo "$usage"
   exit 0
 }
 
-test "$#" -ne 2 && {
+not_equal "$#" 2 && {
   echo "ERROR: Invalid amount of arguments $#, need 2."
   echo ""
   echo "$usage"
@@ -23,26 +24,17 @@ test "$#" -ne 2 && {
 
 instance_path=$1
 ldif=$2
+canonical_instance_path=$(canonical_path "${instance_path}")
+canonical_ldif=$(canonical_path $(dirname "${ldif}"))/$(basename "${ldif}")
 
-# Get canonical instance path
-pushd "${instance_path}" > /dev/null
-canonical_instance_path=`pwd -P`
-popd > /dev/null
-
-# Get canonical path to ldif file
-pushd `dirname "${ldif}"` > /dev/null
-ldif_basename=$(basename ${ldif})
-canonical_ldif="`pwd -P`/${ldif_basename}"
-popd > /dev/null
-
-ls "${canonical_instance_path}/config.d" &> /dev/null || {
+exists_not "${canonical_instance_path}/config.d" && {
   echo "ERROR: Given instance path does not have a config.d/ directory."
   echo ""
   echo "Please supply a valid instance path created by 'new-instance'"
   exit 1
 }
 
-ls "${canonical_ldif}" &> /dev/null || {
+exists_not "${canonical_ldif}" && {
   echo "ERROR: Could not find given ldif file \"${canonical_ldif}\""
   echo ""
   echo "Please supply an existing ldif file."
@@ -56,10 +48,10 @@ echo '# slapadd \'
 echo '# --verbose \'
 echo "# -F \"${canonical_instance_path}/config.d\" \\"
 echo "# -b \"cn=config\" \\"
-echo "# -l \"${ldif}\""
+echo "# -l \"${canonical_ldif}\""
 echo ''
 
-slapadd -F "${canonical_instance_path}/config.d" -b "cn=config" -l "${ldif}" || {
+slapadd -F "${canonical_instance_path}/config.d" -b "cn=config" -l "${canonical_ldif}" || {
   echo ""
   echo "ERROR: slapadd exit code not 0!"
   echo ""

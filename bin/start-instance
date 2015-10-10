@@ -1,20 +1,21 @@
 #!/bin/bash
 
-set -e
-set -u
-set -o errexit
+source "$(dirname $0)/functions.sh"
+
+$(fail_on_nontrue_return_value)
+$(fail_on_unbound_variables)
 
 bin_name=$(basename $0)
 usage="Usage: ${bin_name} <instance path>
 
 Example: ${bin_name} ~/slapd-test"
 
-(test "$1" = "-h" || test "$1" = "--help") && {
+want_help $1 && {
   echo "$usage"
   exit 0
 }
 
-test "$#" -ne 1 && {
+not_equal $# 1 && {
   echo "ERROR: Invalid amount of arguments $#, need 1."
   echo ""
   echo "$usage"
@@ -23,21 +24,18 @@ test "$#" -ne 1 && {
 
 instance_path=$1
 instance_name="$(basename $instance_path)"
-
 instance_port=3389
 
 set +u
-test "$SLAPD_PORT" = "" || {
+not_empty "$SLAPD_PORT" && {
   instance_port=$SLAPD_PORT
 }
 set -u
 
 # Get canonical instance path
-pushd "${instance_path}" > /dev/null
-canonical_instance_path=`pwd -P`
-popd > /dev/null
+canonical_instance_path=$(canonical_path "${instance_path}")
 
-ls "${canonical_instance_path}/config.d" &> /dev/null || {
+exists_not "${canonical_instance_path}/config.d" && {
   echo "ERROR: Given instance path does not have a config.d/ directory."
   echo ""
   echo "Please supply a valid instance path created by 'new-instance'"
@@ -49,15 +47,14 @@ user=$(whoami)
 group=$(groups | awk -F ' ' '{ print $1; }')
 
 socket_path="${canonical_instance_path}/run/socket"
-encoded_socket_path=$(echo $socket_path | sed -e "s|/|%2F|g" -e "s| |%20|g")
+encoded_socket_path=$(uri_encode "${socket_path}")
 
-slapd \
-  -4 \
-  -F "${canonical_instance_path}/config.d" \
-  -g "${group}" \
-  -u "${user}" \
-  -h "ldapi://${encoded_socket_path}/ ldap://127.0.0.1:${instance_port}" \
-  -n "${instance_name}" \
+slapd -4 \
+      -F "${canonical_instance_path}/config.d" \
+      -g "${group}" \
+      -u "${user}" \
+      -h "ldapi://${encoded_socket_path}/ ldap://127.0.0.1:${instance_port}" \
+      -n "${instance_name}" \
   && {
   echo 'slapd successfully detached.'
   echo ''
@@ -67,4 +64,3 @@ slapd \
 
 echo 'slapd exit code is not 0. Something went wrong.'
 exit 1
-
