@@ -59,7 +59,9 @@ slapd \
   -h "ldapi://${encoded_socket_path}/ ldap://127.0.0.1:${instance_port}" \
   -n "${instance_name}" \
   && {
-  echo 'Success.'
+  echo 'slapd successfully detached.'
+  echo ''
+  echo 'Please watch your syslog output file for more information.'
   exit 0
 }
 
