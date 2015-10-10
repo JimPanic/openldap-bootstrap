@@ -49,7 +49,7 @@ user=$(whoami)
 group=$(groups | awk -F ' ' '{ print $1; }')
 
 socket_path="${canonical_instance_path}/run/socket"
-encoded_socket_path=$(echo $socket_path | sed -e "s|/|%2F|g" | sed -e "s| |%20|g")
+encoded_socket_path=$(echo $socket_path | sed -e "s|/|%2F|g" -e "s| |%20|g")
 
 slapd \
   -4 \
