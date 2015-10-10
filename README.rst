@@ -49,13 +49,12 @@ This creates the following directories and files::
   ├── info
   ├── ldif
   │   ├── cn=config.ldif
-  │   ├── cn=schema,cn=config.ldif
-  │   ├── database,cn=config.ldif
-  │   ├── frontend-config-databases,cn=config.ldif
   │   └── schema
-  │       └── schema
   ├── log
+  │   └── slapd.log
   └── run
+      └── socket
+
 
   9 directories, 5 files
 
