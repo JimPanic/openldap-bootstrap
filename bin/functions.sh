@@ -40,38 +40,38 @@ function canonical_path () {
 }
 
 function equal () {
-  test "$#" -eq "2" && test "$1" = "$2"
+  [ "$#" -eq "2" ] && [ "$1" = "$2" ]
   return $?
 }
 
 function not_equal () {
-  test "$#" -eq "2" && test "$1" -ne "$2"
+  [ "$#" -eq "2" ] && [ "$1" -ne "$2" ]
   return $?
 }
 
 function match () {
-  equal $# 2 && test "$1" = "$2"
+  equal $# 2 && [ "$1" = "$2" ]
   return $?
 }
 
 function match_not () {
-  equal $# 2 && test "$1" != "$2"
+  equal $# 2 && [ "$1" != "$2" ]
   return $?
 }
 
 function exists () {
-  test "$#" -eq "1" && ls "$1" &> /dev/null
+  [ "$#" -eq "1" ] && ls "$1" &> /dev/null
   return $?
 }
 
 function exists_not () {
-  test "$#" -eq "1" && ls "$1" &> /dev/null
+  [ "$#" -eq "1" ] && ls "$1" &> /dev/null
   not_equal $? 0
   return $?
 }
 
 function want_help () {
-  equal "$1" "-h" || equal "$1" "--help"
+  match "$1" "-h" || match "$1" "--help"
   return $?
 }
 
@@ -80,11 +80,11 @@ function uri_encode () {
 }
 
 function empty () {
-  test "$1" = ""
+  [ "$1" = "" ]
   return $?
 }
 
 function not_empty () {
-  test "$1" != ""
+  [ "$1" != "" ]
   return $?
 }
