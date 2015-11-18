@@ -68,7 +68,7 @@ canonical_instance_path=$(canonical_path "${instance_path}")
 
 # Copy over (all) schema ldifs, the user will decide which ones to load via
 # slapadd
-cp -r "${ldif_path}/schema" "${canonical_instance_path}/ldif/"
+#cp -r "${ldif_path}/schema" "${canonical_instance_path}/ldif/"
 
 
 # Copy over selected configuration ldifs with replaced placeholders
