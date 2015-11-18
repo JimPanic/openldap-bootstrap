@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source "$(dirname $0)/functions.sh"
+source "$(dirname $0)/md5.sh"
 
 $(fail_on_nontrue_return_value)
 $(fail_on_unbound_variables)
@@ -37,7 +38,7 @@ ldif_path=$(canonical_path "${bin_path}/../ldif/")
 
 # root DN (bind DN) and password for the database
 data_root_dn="cn=root,${tree_root}"
-data_root_pw=`date | md5`
+data_root_pw=`date | ${MD5_PROGRAM}`
 
 # Config database path and root dn password (cn=root,cn=config)
 config_d_path="${instance_path}/config.d"
@@ -80,6 +81,10 @@ cat "${ldif_path}/cn=config.ldif" \
         -e "s|ROOT_PW|${data_d_root_hash}|g" \
   > "${canonical_instance_path}/ldif/cn=config.ldif"
 
+cat "${ldif_path}/root.ldif" \
+  | sed -e "s|TREE_ROOT_DN|${tree_root}|g" \
+  > "${canonical_instance_path}/ldif/root.ldif"
+
 info="
 Instance path:                    ${instance_path}
 Log file:                         ${instance_path}/log/slapd.log
@@ -96,6 +101,7 @@ ldapi socket file:                ${instance_path}/run/socket
 
 Prepared LDIFs:
  - cn=config                      ${instance_path}/ldif/cn=config.ldif
+ - root.ldif                      ${instance_path}/ldif/root.ldif
 "
 
 echo "${info}" > "${canonical_instance_path}/info"
